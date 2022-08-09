@@ -19,15 +19,30 @@ const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server });
 
+const sockets = [];
+
 wss.on("connection", (socket) => {
+  sockets.push(socket);
+  socket["nickname"] = "Anon";
   console.log("Connected to Browser !");
   socket.on("close", () => {
     console.log("Disconnect from the Browser.");
+    sockets.pop(socket);
+    console.log(sockets);
   });
   socket.on("message", (message) => {
-    console.log(`New Message: ${message.data}`);
+    const msg = JSON.parse(message);
+    console.log(msg);
+    switch (msg.type) {
+      case "new_message":
+        sockets.forEach((aSocket) => {
+          aSocket.send(`${socket.nickname}: ${msg.payload}`);
+        });
+        break;
+      case "nickname":
+        socket["nickname"] = msg.payload;
+    }
   });
-  socket.send("Hello!!");
 });
 
 server.listen(3000, handleListen);
