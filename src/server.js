@@ -1,7 +1,8 @@
+// import WebSocket, { WebSocketServer } from "ws";
 import express from "express";
 import * as url from "url";
 import http from "http";
-import WebSocket, { WebSocketServer } from "ws";
+import { Server } from "socket.io";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -15,9 +16,10 @@ app.get("/*", (_, res) => res.redirect("/"));
 
 const handleListen = () => console.log("Listening on http://localhost:3000");
 
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
+const ioServer = new Server(httpServer);
 
-const wss = new WebSocketServer({ server });
+/*const wss = new WebSocketServer({ server });
 
 const sockets = [];
 
@@ -43,6 +45,13 @@ wss.on("connection", (socket) => {
         socket["nickname"] = msg.payload;
     }
   });
-});
+});*/
 
-server.listen(3000, handleListen);
+httpServer.listen(3000, handleListen);
+
+ioServer.on("connection", (socket) => {
+  socket.on("enter_room", (roomName, done) => {
+    console.log(roomName);
+    done(roomName);
+  });
+}); // 프론트엔드에서 설정한 이름과 같아야 한다. 프론트엔드에서 설정된 함수를 백엔드가 신호를 보내 프론트엔드에서 실행되도록 설정 가능 (argument 입력 가능)
