@@ -1,0 +1,12 @@
+@import url(https://unpkg.com/mvp.css);
+
+#leave-btn {
+  cursor: pointer;
+  color: red;
+  font-size: 2vw;
+}
+
+#change-nick {
+  cursor: pointer;
+  font-size: 1vw;
+}

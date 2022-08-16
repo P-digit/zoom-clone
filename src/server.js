@@ -47,11 +47,56 @@ wss.on("connection", (socket) => {
   });
 });*/
 
-httpServer.listen(3000, handleListen);
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = ioServer;
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
 
 ioServer.on("connection", (socket) => {
+  socket["nickname"] = "Anon";
   socket.on("enter_room", (roomName, done) => {
-    console.log(roomName);
-    done(roomName);
+    socket.join(roomName);
+    done();
+    socket["current_room"] = roomName;
+    socket.to(roomName).emit("welcome", socket.nickname);
+    ioServer.sockets.emit("room_change", publicRooms());
+  });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => {
+      socket.to(room).emit("bye", socket.nickname);
+    });
+  });
+  socket.on("disconnect", () => {
+    ioServer.sockets.emit("room_change", publicRooms());
+  });
+
+  socket.on("leave_room", () => {
+    const current_room = socket["current_room"];
+    socket.leave(current_room);
+    socket.to(current_room).emit("bye", socket.nickname + "leave");
+    socket.emit("room_change", publicRooms());
+  });
+
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
+    done();
+  });
+  socket.on("nickname", (nickname) => {
+    if (nickname !== "") {
+      socket["nickname"] = nickname;
+    }
+    socket.emit("load_rooms", publicRooms());
   });
 }); // 프론트엔드에서 설정한 이름과 같아야 한다. 프론트엔드에서 설정된 함수를 백엔드가 신호를 보내 프론트엔드에서 실행되도록 설정 가능 (argument 입력 가능)
+
+httpServer.listen(3000, handleListen);
