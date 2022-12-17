@@ -83,7 +83,7 @@ ioServer.on("connection", (socket) => {
   socket.on("leave_room", () => {
     const current_room = socket["current_room"];
     socket.leave(current_room);
-    socket.to(current_room).emit("bye", socket.nickname + "leave");
+    socket.to(current_room).emit("bye", socket.nickname);
     socket.emit("room_change", publicRooms());
   });
 
