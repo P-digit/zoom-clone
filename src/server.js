@@ -3,6 +3,7 @@ import express from "express";
 import * as url from "url";
 import http from "http";
 import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -17,7 +18,17 @@ app.get("/*", (_, res) => res.redirect("/"));
 const handleListen = () => console.log("Listening on http://localhost:3000");
 
 const httpServer = http.createServer(app);
-const ioServer = new Server(httpServer);
+const ioServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(ioServer, {
+  auth: false,
+  mode: "development",
+});
 
 /*const wss = new WebSocketServer({ server });
 
@@ -47,6 +58,10 @@ wss.on("connection", (socket) => {
   });
 });*/
 
+function countUser(roomName) {
+  return ioServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 function publicRooms() {
   const {
     sockets: {
@@ -67,6 +82,7 @@ ioServer.on("connection", (socket) => {
   socket.on("enter_room", (roomName, done) => {
     socket.join(roomName);
     done();
+    socket.to(roomName).emit("user_count", countUser(roomName));
     socket["current_room"] = roomName;
     socket.to(roomName).emit("welcome", socket.nickname);
     ioServer.sockets.emit("room_change", publicRooms());
@@ -84,6 +100,7 @@ ioServer.on("connection", (socket) => {
     const current_room = socket["current_room"];
     socket.leave(current_room);
     socket.to(current_room).emit("bye", socket.nickname);
+    socket.to(current_room).emit("user_count", countUser(roomName));
     socket.emit("room_change", publicRooms());
   });
 

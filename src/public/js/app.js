@@ -11,12 +11,17 @@ room.hidden = true;
 welcome.hidden = true;
 
 let roomName;
+let numUser;
+
+function handleUserCount(numOfUser) {
+  numUser = numOfUser;
+}
 
 function showRoom() {
   welcome.hidden = true;
   room.hidden = false;
   const h3 = room.querySelector("h3");
-  h3.innerText = `Room ${roomName}`;
+  h3.innerText = `Room ${roomName} ${numUser}`;
 }
 
 function addMessage(message) {
@@ -78,7 +83,8 @@ function handleRoomSubmit(event) {
   const roomList = welcome.querySelector("ul");
   const rooms = roomList.querySelectorAll("li");
   socket.emit("enter_room", input.value, showRoom);
-  roomName = input.value;
+  roomName = `${input.value}`;
+
   input.value = "";
   console.log(rooms);
   rooms.forEach((room) => {
@@ -119,6 +125,10 @@ socket.on("room_change", (rooms) => {
 
 socket.on("new_message", (message) => {
   addMessage(message);
+});
+
+socket.on("user_count", (numOfUser) => {
+  handleUserCount(numOfUser);
 });
 
 socket.on("paint_nickname", (nickname) => {});
