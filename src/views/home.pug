@@ -10,26 +10,7 @@ html(lang="en")
     body 
         header 
             h1 Noom
-        main 
-            div#nick
-                form
-                    input(placeholder="Write a Nickname (or Anonymous", type="text")
-                    button Save
-            div#welcome
-                h4
-                form
-                    input(placeholder="room name", required, type="text")
-                    button Enter Room
-                    input(type="button", id="change-nick", value="닉네임 변경하기")
-                h3 Open Rooms:
-                ul
-            div#room
-                h3 
-                ul 
-                form#msg
-                    input(placehoder="message", required, type="text")
-                    button send
-                    input(type="button", id="leave-btn", value="⬅") 
+            video#myFace(autoplay, playinline, width="4")
         script(src="socket.io/socket.io.js")
         script(src="public/js/app.js")
 123
